@@ -1,0 +1,28 @@
+{
+  "name": "threejs",
+  "version": "1.0.0",
+  "description": "CMSC405 Project 3",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack-dev-server --entry ./src/js/app.js --output-filename ./dist/bundle.js",
+    "build:prod": "webpack src/js/app.js dist/bundle.js -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EdFabre/CMSC405Project3.git"
+  },
+  "author": "Ed Fabre",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/EdFabre/CMSC405Project3/issues"
+  },
+  "homepage": "https://github.com/EdFabre/CMSC405Project3#readme",
+  "dependencies": {
+    "three": "^0.88.0"
+  },
+  "devDependencies": {
+    "webpack": "^3.9.1",
+    "webpack-dev-server": "^2.9.5"
+  }
+}
