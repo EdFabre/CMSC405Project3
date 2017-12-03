@@ -18,7 +18,7 @@ THREE.OrbitControls = require(
   'imports-loader?THREE=three!exports-loader?THREE.OrbitControls!../../node_modules\/three\/examples\/js\/controls\/OrbitControls'
 );
 
-// Imports my shape generators to maintain clean code
+// Imports my shapes file to maintain clean code
 import * as SHAPES from "./shapes.js";
 const path = require('path');
 
@@ -27,6 +27,7 @@ var camera,
   scene,
   renderer,
   bulbLight,
+  bulbLightObject,
   light1,
   light2,
   light3,
@@ -44,75 +45,30 @@ var pyramid,
   torus,
   torusKnot;
 
-init();
-animate();
 
-var datOpts = {
-  bulbIntensity,
-  bulbColor,
-  gVelx,
-  gVely,
-  stop: function() {
-    gVelx = 0;
-    gVely = 0;
-  },
-  reset: function() {
-    this.gVelx = 0.01;
-    this.gVely = 0.02;
-    gVelx = 0.01;
-    gVely = 0.02;
-    camera.position.z = 1;
-    cube.material.wireframe = true;
-  }
-};
+// Runs the App
+run(true);
 
-var gui = new dat.GUI();
+/**
+ * Runs the Three.JS app. Specifiy true or false to indicate whether you want to
+ * use grid lines or not.
+ *
+ * @param  {[type]} useHelpers [description]
+ * @return {[type]}            [description]
+ */
+function run(useHelpers) {
+  // Initializes the scene camera and other objects used
+  init(useHelpers);
 
-var velocity = gui.addFolder('Velocity');
-velocity.add(datOpts, 'gVelx', -.1, .1).name('X').onChange(function(
-  value) {
-  gVelx = value;
-});
-velocity.add(datOpts, 'gVely', -.1, .1).name('Y').onChange(function(
-  value) {
-  gVely = value;
-});
-velocity.open();
+  // Includes animation within this scene
+  animate();
 
-var fLights = gui.addFolder('Lights');
-fLights.add(datOpts, 'bulbIntensity', 0, 10).name('intensity').onChange(
-  function(
-    value) {
-    console.log(value);
-    bulbIntensity = value;
-  });
-fLights.addColor(datOpts, 'bulbColor').onChange(function(
-  value) {
-  bulbColor = value;
-});
-fLights.open();
+  // Includes a GUI which dynamically alters the scene
+  generateDatGUI();
+}
 
-
-var box = gui.addFolder('Cube');
-box.add(cube.scale, 'x', 0, 3).name('Width').listen();
-box.add(cube.scale, 'y', 0, 3).name('Height').listen();
-box.add(cube.scale, 'z', 0, 3).name('Length').listen();
-box.add(cube.material, 'wireframe').listen();
-box.open();
-
-gui.add(datOpts, 'stop');
-gui.add(datOpts, 'reset');
-// var fAnim = gui.addFolder('Animations');
-// fLights.add('text', 'speed', {
-//   Stopped: 0,
-//   Slow: gVelx,
-//   Fast: 0.05
-// });
-
-// fAnim.open();
-
-function init() {
-
+function init(useHelpers) {
+  // Initialize and setup the Camera
   camera = new THREE.PerspectiveCamera(120, window.innerWidth / window.innerHeight,
     .1, 20);
   camera.position.z = 1;
@@ -121,11 +77,13 @@ function init() {
   scene = new THREE.Scene();
 
   // Grid Helper to help with building
-  var size = 10;
-  var divisions = 10;
+  if (useHelpers) {
+    var size = 10;
+    var divisions = 10;
 
-  var gridHelper = new THREE.GridHelper(size, divisions);
-  scene.add(gridHelper);
+    var gridHelper = new THREE.GridHelper(size, divisions);
+    scene.add(gridHelper);
+  }
 
   // Add Lights
   bulbLight = new THREE.PointLight(bulbColor, bulbIntensity, 1000);
@@ -154,18 +112,26 @@ function init() {
     wireframe: true
   });
 
+
   // Attaches the light to an object so that we can visualize light effects
-  var lightbulb = new THREE.Mesh(
+  bulbLightObject = new THREE.Mesh(
     new THREE.SphereGeometry(.1, 16, 8),
     new THREE.MeshBasicMaterial({
       color: bulbColor
     })
   );
-  scene.add(lightbulb);
-  lightbulb.position.x = bulbLight.position.x;
-  lightbulb.position.y = bulbLight.position.y;
-  lightbulb.position.z = bulbLight.position.z;
-
+  scene.add(bulbLightObject);
+  bulbLightObject.position.x = bulbLight.position.x;
+  bulbLightObject.position.y = bulbLight.position.y;
+  bulbLightObject.position.z = bulbLight.position.z;
+  function updateBulb(bulb, opts) {
+    var newBulb = new THREE.Mesh(
+      new THREE.SphereGeometry(.1, 16, 8),
+      new THREE.MeshBasicMaterial({
+        color: bulbColor
+      })
+    );
+  }
   // Creates a cube as per given options
   cube = SHAPES.createCube({
     scene: scene,
@@ -328,4 +294,64 @@ function animate() {
   ring.rotation.x += gVelx;
   ring.rotation.y += gVely;
   renderer.render(scene, camera);
+}
+
+function generateDatGUI() {
+  var datOpts = {
+    bulbIntensity,
+    bulbColor,
+    gVelx,
+    gVely,
+    stop: function() {
+      gVelx = 0;
+      gVely = 0;
+    },
+    reset: function() {
+      this.gVelx = 0.01;
+      this.gVely = 0.02;
+      gVelx = 0.01;
+      gVely = 0.02;
+      camera.position.z = 1;
+      cube.material.wireframe = true;
+    }
+  };
+
+  var gui = new dat.GUI();
+
+  var velocity = gui.addFolder('Velocity');
+  velocity.add(datOpts, 'gVelx', -.1, .1).name('X').onChange(function(
+    value) {
+    gVelx = value;
+  });
+  velocity.add(datOpts, 'gVely', -.1, .1).name('Y').onChange(function(
+    value) {
+    gVely = value;
+  });
+  velocity.open();
+
+  var fLights = gui.addFolder('Lights');
+  fLights.add(datOpts, 'bulbIntensity', 0, 10).name('intensity').onChange(
+    function(
+      value) {
+      console.log(value);
+      bulbLight.intensity = value;
+    });
+  fLights.addColor(datOpts, 'bulbColor').onChange(function(
+    value) {
+    bulbLight.color.set(value);
+    bulbLightObject.material.setValues({
+      color: value
+    });
+  });
+  fLights.open();
+
+  var box = gui.addFolder('Cube');
+  box.add(cube.scale, 'x', 0, 3).name('Width').listen();
+  box.add(cube.scale, 'y', 0, 3).name('Height').listen();
+  box.add(cube.scale, 'z', 0, 3).name('Length').listen();
+  box.add(cube.material, 'wireframe').listen();
+  box.open();
+
+  gui.add(datOpts, 'stop');
+  gui.add(datOpts, 'reset');
 }
