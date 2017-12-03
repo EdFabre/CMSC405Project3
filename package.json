@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/EdFabre/CMSC405Project3#readme",
   "dependencies": {
+    "dat.gui": "dataarts/dat.gui",
     "three": "^0.88.0",
     "three-orbit-controls": "^82.1.0"
   },

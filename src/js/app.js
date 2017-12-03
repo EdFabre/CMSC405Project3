@@ -4,13 +4,15 @@
  * @Email:  edwidgefabre@gmail.com
  * @Filename: app.js
  * @Last modified by:   Fabre Ed
- * @Last modified time: 2017-12-02T17:40:21-05:00
+ * @Last modified time: 2017-12-03T10:38:46-05:00
  */
 
 
 
 import '../css/app.css';
 import * as THREE from 'three';
+import * as dat from 'dat.gui/build/dat.gui.min.js';
+
 // Imports specific controls since this is an NPM project
 THREE.OrbitControls = require(
   'imports-loader?THREE=three!exports-loader?THREE.OrbitControls!../../node_modules\/three\/examples\/js\/controls\/OrbitControls'
@@ -24,10 +26,14 @@ const path = require('path');
 var camera,
   scene,
   renderer,
-  light,
+  bulbLight,
   light1,
   light2,
-  light3;
+  light3,
+  gVelx = 0.01,
+  gVely = 0.02,
+  bulbIntensity = 1,
+  bulbColor = '#e0db09';
 
 // Shapes which will be used in this scene
 var pyramid,
@@ -40,6 +46,70 @@ var pyramid,
 
 init();
 animate();
+
+var datOpts = {
+  bulbIntensity,
+  bulbColor,
+  gVelx,
+  gVely,
+  stop: function() {
+    gVelx = 0;
+    gVely = 0;
+  },
+  reset: function() {
+    this.gVelx = 0.01;
+    this.gVely = 0.02;
+    gVelx = 0.01;
+    gVely = 0.02;
+    camera.position.z = 1;
+    cube.material.wireframe = true;
+  }
+};
+
+var gui = new dat.GUI();
+
+var velocity = gui.addFolder('Velocity');
+velocity.add(datOpts, 'gVelx', -.1, .1).name('X').onChange(function(
+  value) {
+  gVelx = value;
+});
+velocity.add(datOpts, 'gVely', -.1, .1).name('Y').onChange(function(
+  value) {
+  gVely = value;
+});
+velocity.open();
+
+var fLights = gui.addFolder('Lights');
+fLights.add(datOpts, 'bulbIntensity', 0, 10).name('intensity').onChange(
+  function(
+    value) {
+    console.log(value);
+    bulbIntensity = value;
+  });
+fLights.addColor(datOpts, 'bulbColor').onChange(function(
+  value) {
+  bulbColor = value;
+});
+fLights.open();
+
+
+var box = gui.addFolder('Cube');
+box.add(cube.scale, 'x', 0, 3).name('Width').listen();
+box.add(cube.scale, 'y', 0, 3).name('Height').listen();
+box.add(cube.scale, 'z', 0, 3).name('Length').listen();
+box.add(cube.material, 'wireframe').listen();
+box.open();
+
+gui.add(datOpts, 'stop');
+gui.add(datOpts, 'reset');
+// var fAnim = gui.addFolder('Animations');
+// fLights.add('text', 'speed', {
+//   Stopped: 0,
+//   Slow: gVelx,
+//   Fast: 0.05
+// });
+
+// fAnim.open();
 
 function init() {
 
@@ -58,9 +128,9 @@ function init() {
   scene.add(gridHelper);
 
   // Add Lights
-  light = new THREE.PointLight(0xf2ff00, 1, 1000);
-  light.position.set(0, 0, 0);
-  scene.add(light);
+  bulbLight = new THREE.PointLight(bulbColor, bulbIntensity, 1000);
+  bulbLight.position.set(0, 0, 0);
+  scene.add(bulbLight);
 
   // light1 = new THREE.PointLight(0xffffff, 1, 1000);
   // light1.position.set(0, 0, 50);
@@ -76,10 +146,11 @@ function init() {
 
   // Define Materials, MeshPhongMaterials can interact with light.
   var reflectableGreenSolidMaterial = new THREE.MeshPhongMaterial({
-    color: 0x72ee23
+    color: '#f50101',
+    wireframe: true
   });
-  var greenWireframeMaterial = new THREE.MeshBasicMaterial({
-    color: 0x42e7c5,
+  var greenWireframeMaterial = new THREE.MeshPhongMaterial({
+    color: '#42e7c5',
     wireframe: true
   });
 
@@ -87,13 +158,13 @@ function init() {
   var lightbulb = new THREE.Mesh(
     new THREE.SphereGeometry(.1, 16, 8),
     new THREE.MeshBasicMaterial({
-      color: 0xf2ff00
+      color: bulbColor
     })
   );
   scene.add(lightbulb);
-  lightbulb.position.x = light.position.x;
-  lightbulb.position.y = light.position.y;
-  lightbulb.position.z = light.position.z;
+  lightbulb.position.x = bulbLight.position.x;
+  lightbulb.position.y = bulbLight.position.y;
+  lightbulb.position.z = bulbLight.position.z;
 
   // Creates a cube as per given options
   cube = SHAPES.createCube({
@@ -206,7 +277,7 @@ function init() {
   // Updates the canvas on initial run
   updateCanvas({
     antialias: true,
-    clearColor: 0x304850
+    clearColor: '#304850'
   })
 }
 
@@ -235,23 +306,26 @@ function updateCanvas(opts) {
 
 function animate() {
   requestAnimationFrame(animate);
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.02;
 
-  sphere.rotation.x += 0.01;
-  sphere.rotation.y += 0.02;
+  cube.rotation.x += gVelx;
+  cube.rotation.y += gVely;
 
-  dome.rotation.x += 0.01;
+  sphere.rotation.x += gVelx;
+  sphere.rotation.y += gVely;
 
-  pyramid.rotation.x += 0.01;
-  pyramid.rotation.y += 0.02;
+  dome.rotation.x += gVelx;
+  dome.rotation.y += gVelx;
 
-  torusKnot.rotation.x += 0.01;
-  torusKnot.rotation.y += 0.02;
+  pyramid.rotation.x += gVelx;
+  pyramid.rotation.y += gVely;
 
-  torus.rotation.x += 0.01;
-  torus.rotation.y += 0.02;
+  torusKnot.rotation.x += gVelx;
+  torusKnot.rotation.y += gVely;
 
-  ring.rotation.x += 0.01;
+  torus.rotation.x += gVelx;
+  torus.rotation.y += gVely;
+
+  ring.rotation.x += gVelx;
+  ring.rotation.y += gVely;
   renderer.render(scene, camera);
 }

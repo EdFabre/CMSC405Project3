@@ -1,12 +1,10 @@
 /**
- *
- *
  * @Author: Fabre Ed
  * @Date:   2017-12-02T11:50:07-05:00
  * @Email:  edwidgefabre@gmail.com
  * @Filename: shapes.js
  * @Last modified by:   Fabre Ed
- * @Last modified time: 2017-12-02T17:35:03-05:00
+ * @Last modified time: 2017-12-02T17:51:13-05:00
  */
 
 import * as THREE from 'three';
@@ -94,11 +92,7 @@ export var createTorus = function createTorus(opts) {
   return temp;
 }
 
-/**
- * Creates a TorusKnot
- * @param  {[type]} opts [description]
- * @return {[type]}      [description]
- */
+// Creates the torus Knot
 export var createTorusKnot = function createTorusKnot(opts) {
   var temp = new THREE.Mesh(
     new THREE.TorusKnotGeometry(

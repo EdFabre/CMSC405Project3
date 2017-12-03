@@ -23,9 +23,9 @@ repository to run the application:
 
 ```sh
 git clone https://github.com/EdFabre/CMSC405Project3.git
-cd CMSC495-FitnessTracker
+cd CMSC405Project3
 npm install OR yarn
-npm start
+npm run build
 ```
 
 ## Running the tests
@@ -34,16 +34,13 @@ TBA
 
 ## Built With
 
-* [ThreeJS](https://threejs.org/) - Javascript 3D Library
-* [Webpack](https://webpack.js.org/) - Module bundler
-
-## Contributing
-
-TBA
+* [ThreeJS](https://threejs.org/) - A Javascript 3D Library
+* [Webpack](https://webpack.js.org/) - A robust Module bundler
+* [DAT.GUI](http://workshop.chromeexperiments.com/) - A lightweight graphical user interface for changing variables in JavaScript.
 
 ## Versioning
 
-TBA
+v1.0.0
 
 ## Authors
 
@@ -57,4 +54,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-TBA
+Professor King for the inspiration.
