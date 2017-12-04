@@ -4,7 +4,7 @@
  * @Email:  edwidgefabre@gmail.com
  * @Filename: shapes.js
  * @Last modified by:   Fabre Ed
- * @Last modified time: 2017-12-02T17:51:13-05:00
+ * @Last modified time: 2017-12-03T22:04:42-05:00
  */
 
 import * as THREE from 'three';
@@ -16,12 +16,18 @@ export var createCube = function createCube(opts) {
       opts.width,
       opts.height,
       opts.depth),
-    opts.material);
+    new THREE.MeshPhongMaterial({
+      color: opts.color,
+      side: THREE.DoubleSide
+    }));
   opts.scene.add(temp);
   temp.position.x += opts.position.x
   temp.position.y += opts.position.y
   temp.position.z += opts.position.z
-  return temp;
+  return {
+    mesh: temp,
+    color: opts.color
+  };
 }
 
 // Used to create a sphere object
@@ -35,12 +41,18 @@ export var createSphereOrDome = function createSphereOrDome(opts) {
       opts.phiLength || Math.PI * 2,
       opts.thetaStart || 0,
       opts.thetaLength || Math.PI),
-    opts.material);
+    new THREE.MeshPhongMaterial({
+      color: opts.color,
+      side: THREE.DoubleSide
+    }));
   opts.scene.add(temp);
   temp.position.x += opts.position.x
   temp.position.y += opts.position.y
   temp.position.z += opts.position.z
-  return temp;
+  return {
+    mesh: temp,
+    color: opts.color
+  };
 }
 
 // Used to create a pyramid object
@@ -52,12 +64,18 @@ export var createPyramid = function createPyramid(opts) {
       opts.height,
       4,
       4),
-    opts.material);
+    new THREE.MeshPhongMaterial({
+      color: opts.color,
+      side: THREE.DoubleSide
+    }));
   opts.scene.add(temp);
   temp.position.x += opts.position.x
   temp.position.y += opts.position.y
   temp.position.z += opts.position.z
-  return temp;
+  return {
+    mesh: temp,
+    color: opts.color
+  };
 }
 
 // Used to create a ring object
@@ -67,12 +85,18 @@ export var createRing = function createRing(opts) {
       opts.innerRadius,
       opts.outterRadius,
       opts.thetaSegments),
-    opts.material);
+    new THREE.MeshPhongMaterial({
+      color: opts.color,
+      side: THREE.DoubleSide
+    }));
   opts.scene.add(temp);
   temp.position.x += opts.position.x
   temp.position.y += opts.position.y
   temp.position.z += opts.position.z
-  return temp;
+  return {
+    mesh: temp,
+    color: opts.color
+  };
 }
 
 // Used to create a torus(donut) object
@@ -84,12 +108,18 @@ export var createTorus = function createTorus(opts) {
       opts.radialSegments,
       opts.tubularSegments,
       opts.arc),
-    opts.material);
+    new THREE.MeshPhongMaterial({
+      color: opts.color,
+      side: THREE.DoubleSide
+    }));
   opts.scene.add(temp);
   temp.position.x += opts.position.x
   temp.position.y += opts.position.y
   temp.position.z += opts.position.z
-  return temp;
+  return {
+    mesh: temp,
+    color: opts.color
+  };
 }
 
 // Creates the torus Knot
@@ -102,10 +132,16 @@ export var createTorusKnot = function createTorusKnot(opts) {
       opts.radialSegments,
       opts.p,
       opts.q),
-    opts.material);
+    new THREE.MeshPhongMaterial({
+      color: opts.color,
+      side: THREE.DoubleSide
+    }));
   opts.scene.add(temp);
   temp.position.x += opts.position.x
   temp.position.y += opts.position.y
   temp.position.z += opts.position.z
-  return temp;
+  return {
+    mesh: temp,
+    color: opts.color
+  };
 }

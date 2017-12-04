@@ -4,14 +4,13 @@
  * @Email:  edwidgefabre@gmail.com
  * @Filename: app.js
  * @Last modified by:   Fabre Ed
- * @Last modified time: 2017-12-03T10:38:46-05:00
+ * @Last modified time: 2017-12-03T23:29:35-05:00
  */
-
-
 
 import '../css/app.css';
 import * as THREE from 'three';
 import * as dat from 'dat.gui/build/dat.gui.min.js';
+var convert = require('color-convert');
 
 // Imports specific controls since this is an NPM project
 THREE.OrbitControls = require(
@@ -24,19 +23,18 @@ const path = require('path');
 
 // Global variables
 var camera,
+  origCamera,
   scene,
   renderer,
-  bulbLight,
-  bulbLightObject,
-  light1,
-  light2,
-  light3,
-  gVelx = 0.01,
-  gVely = 0.02,
-  bulbIntensity = 1,
-  bulbColor = '#e0db09';
+  canvasColor,
+  lightBulb,
+  sceneLightY,
+  sceneLightZ,
+  sceneLightX,
+  gVelx,
+  gVely;
 
-// Shapes which will be used in this scene
+// Shapes and materials which will be used in this scene
 var pyramid,
   cube,
   sphere,
@@ -46,8 +44,8 @@ var pyramid,
   torusKnot;
 
 
-// Runs the App
-run(true);
+// Runs the App with(true) or without(false) helpers.
+run(false);
 
 /**
  * Runs the Three.JS app. Specifiy true or false to indicate whether you want to
@@ -67,16 +65,30 @@ function run(useHelpers) {
   generateDatGUI();
 }
 
+/**
+ * This function is where the creation and rendering of the scene occurs.
+ *
+ * @param  {[type]} useHelpers [description]
+ * @return {[type]}            [description]
+ */
 function init(useHelpers) {
+  // Initialize some of our globals
+  gVelx = 0.01;
+  gVely = 0.02;
+  canvasColor = '#304850';
+
   // Initialize and setup the Camera
   camera = new THREE.PerspectiveCamera(120, window.innerWidth / window.innerHeight,
     .1, 20);
   camera.position.z = 1;
 
+  // Save the camera original position
+  origCamera = camera.clone();
+
   // Create the Scene
   scene = new THREE.Scene();
 
-  // Grid Helper to help with building
+  // Grid Helper to help with building the scene
   if (useHelpers) {
     var size = 10;
     var divisions = 10;
@@ -85,60 +97,41 @@ function init(useHelpers) {
     scene.add(gridHelper);
   }
 
-  // Add Lights
-  bulbLight = new THREE.PointLight(bulbColor, bulbIntensity, 1000);
-  bulbLight.position.set(0, 0, 0);
-  scene.add(bulbLight);
-
-  // light1 = new THREE.PointLight(0xffffff, 1, 1000);
-  // light1.position.set(0, 0, 50);
-  // scene.add(light1);
-  //
-  // light2 = new THREE.PointLight(0xffffff, 1, 1000);
-  // light2.position.set(0, 50, 0);
-  // scene.add(light2);
-  //
-  // light3 = new THREE.PointLight(0xffffff, 1, 1000);
-  // light3.position.set(50, 0, 0);
-  // scene.add(light3);
-
-  // Define Materials, MeshPhongMaterials can interact with light.
-  var reflectableGreenSolidMaterial = new THREE.MeshPhongMaterial({
-    color: '#f50101',
-    wireframe: true
-  });
-  var greenWireframeMaterial = new THREE.MeshPhongMaterial({
-    color: '#42e7c5',
-    wireframe: true
+  // Adds a light bulb to the current scene
+  lightBulb = addLightBulb({
+    scene,
+    color: '#ffffff',
+    intensity: 2,
+    distance: 100,
+    position: {
+      x: 0,
+      y: 0,
+      z: 0
+    }
   });
 
+  // var light = new THREE.AmbientLight(0x404040, 5); // soft white light
+  // scene.add(light);
 
-  // Attaches the light to an object so that we can visualize light effects
-  bulbLightObject = new THREE.Mesh(
-    new THREE.SphereGeometry(.1, 16, 8),
-    new THREE.MeshBasicMaterial({
-      color: bulbColor
-    })
-  );
-  scene.add(bulbLightObject);
-  bulbLightObject.position.x = bulbLight.position.x;
-  bulbLightObject.position.y = bulbLight.position.y;
-  bulbLightObject.position.z = bulbLight.position.z;
-  function updateBulb(bulb, opts) {
-    var newBulb = new THREE.Mesh(
-      new THREE.SphereGeometry(.1, 16, 8),
-      new THREE.MeshBasicMaterial({
-        color: bulbColor
-      })
-    );
-  }
+  // sceneLightX = new THREE.PointLight(0xffffff, 1, 1000);
+  // sceneLightX.position.set(50, 0, 0);
+  // scene.add(sceneLightX);
+  //
+  // sceneLightY = new THREE.PointLight(0xffffff, 1, 1000);
+  // sceneLightY.position.set(0, 50, 0);
+  // scene.add(sceneLightY);
+  //
+  // sceneLightZ = new THREE.PointLight(0xffffff, 1, 1000);
+  // sceneLightZ.position.set(0, 0, 50);
+  // scene.add(sceneLightZ);
+
   // Creates a cube as per given options
   cube = SHAPES.createCube({
     scene: scene,
     width: .1,
     height: .1,
     depth: .1,
-    material: greenWireframeMaterial,
+    color: '#ff000f',
     position: {
       x: 1,
       y: 1,
@@ -152,7 +145,7 @@ function init(useHelpers) {
     radius: .1,
     widthSeg: 30,
     heightSeg: 20,
-    material: reflectableGreenSolidMaterial,
+    color: '#0c6163',
     position: {
       x: -1,
       y: 1,
@@ -166,7 +159,7 @@ function init(useHelpers) {
     innerRadius: .15,
     outterRadius: .2,
     thetaSegments: 16,
-    material: greenWireframeMaterial,
+    color: '#750a82',
     position: {
       x: -1,
       y: 1,
@@ -184,7 +177,7 @@ function init(useHelpers) {
     phiLength: 2 * Math.PI,
     thetaStart: 0,
     thetaLength: Math.PI / 2,
-    material: greenWireframeMaterial,
+    color: '#385b0d',
     position: {
       x: 0,
       y: 1,
@@ -197,7 +190,7 @@ function init(useHelpers) {
     scene: scene,
     baseRad: .1,
     height: .2,
-    material: greenWireframeMaterial,
+    color: '#cb4d17',
     position: {
       x: -1,
       y: -1,
@@ -213,7 +206,7 @@ function init(useHelpers) {
     radialSegments: 8,
     tubularSegments: 6,
     arc: Math.PI * 2,
-    material: reflectableGreenSolidMaterial,
+    color: '#4a778f',
     position: {
       x: 0,
       y: -1,
@@ -230,7 +223,7 @@ function init(useHelpers) {
     tubularSegments: 64,
     p: 2,
     q: 3,
-    material: reflectableGreenSolidMaterial,
+    color: '#706a1b',
     position: {
       x: 1,
       y: -1,
@@ -238,22 +231,21 @@ function init(useHelpers) {
     }
   });
 
-
-
   // Updates the canvas on initial run
-  updateCanvas({
+  createCanvas({
     antialias: true,
-    clearColor: '#304850'
+    clearColor: canvasColor
   })
 }
 
 /**
  * This function is used to initialize and update the canvas. Like most of my
  * custom code, it takes a JSON obj parameter
+ *
  * @param  {[type]} opts [description]
  * @return {[type]}      [description]
  */
-function updateCanvas(opts) {
+function createCanvas(opts) {
   // Sets the renderer canvas
   renderer = new THREE.WebGLRenderer({
     antialias: opts.antialias
@@ -270,88 +262,269 @@ function updateCanvas(opts) {
   });
 }
 
+/**
+ * Adds basic rotating animation to the scene
+ *
+ * @return {[type]} [description]
+ */
 function animate() {
   requestAnimationFrame(animate);
 
-  cube.rotation.x += gVelx;
-  cube.rotation.y += gVely;
+  cube.mesh.rotation.x += gVelx;
+  cube.mesh.rotation.y += gVely;
 
-  sphere.rotation.x += gVelx;
-  sphere.rotation.y += gVely;
+  sphere.mesh.rotation.x += gVelx;
+  sphere.mesh.rotation.y += gVely;
 
-  dome.rotation.x += gVelx;
-  dome.rotation.y += gVelx;
+  dome.mesh.rotation.x += gVelx;
+  dome.mesh.rotation.y += gVelx;
 
-  pyramid.rotation.x += gVelx;
-  pyramid.rotation.y += gVely;
+  pyramid.mesh.rotation.x += gVelx;
+  pyramid.mesh.rotation.y += gVely;
 
-  torusKnot.rotation.x += gVelx;
-  torusKnot.rotation.y += gVely;
+  torusKnot.mesh.rotation.x += gVelx;
+  torusKnot.mesh.rotation.y += gVely;
 
-  torus.rotation.x += gVelx;
-  torus.rotation.y += gVely;
+  torus.mesh.rotation.x += gVelx;
+  torus.mesh.rotation.y += gVely;
 
-  ring.rotation.x += gVelx;
-  ring.rotation.y += gVely;
+  ring.mesh.rotation.x += gVelx;
+  ring.mesh.rotation.y += gVely;
   renderer.render(scene, camera);
 }
 
+/**
+ * Creates a light for the scene.
+ *
+ * @param  {[type]} lightType [description]
+ * @param  {[type]} opts      [description]
+ * @return {[type]}           [description]
+ */
+function addLight(opts) {
+  var tempLight;
+  switch (opts.type) {
+    case 'point':
+      tempLight = new THREE.PointLight(
+        opts.color || '#ffffff',
+        opts.intensity || 1,
+        opts.distance || 100,
+        opts.decay || 1);
+      tempLight.position.set(
+        opts.position.x,
+        opts.position.y,
+        opts.position.z);
+      opts.scene.add(tempLight);
+      return tempLight;
+    default:
+  }
+}
+
+/**
+ * Updates the bulbs position based on where the light is. This is only Used
+ * once, but when i revisit this project i will be using this more often.
+ *
+ * @param {[type]} inBulb  [description]
+ * @param {[type]} inLight [description]
+ */
+function updateBulbPosition(inBulb, inLight) {
+  inBulb.position.x = inLight.position.x;
+  inBulb.position.y = inLight.position.y;
+  inBulb.position.z = inLight.position.z;
+}
+
+/**
+ * Creates a light bulb and returns a reference to the bulb and light object.
+ *
+ * @param  {[type]} inColor [description]
+ * @param  {[type]} inScene [description]
+ * @return {[type]}         [description]
+ */
+function addLightBulb(opts) {
+  var tempBulb = new THREE.Mesh(
+    new THREE.SphereGeometry(.2, 20, 10),
+    new THREE.MeshBasicMaterial({
+      color: opts.color || '#ffffff'
+    })
+  );
+  opts.scene.add(tempBulb);
+
+  var tempLight = addLight({
+    scene,
+    type: 'point',
+    color: opts.color,
+    intensity: opts.intensity,
+    distance: opts.distance,
+    position: {
+      x: opts.position.x,
+      y: opts.position.y,
+      z: opts.position.z
+    }
+  });
+
+  updateBulbPosition(tempBulb, tempLight);
+
+  return {
+    bulb: tempBulb,
+    light: tempLight,
+    color: opts.color,
+    intensity: opts.intensity
+  }
+}
+
+/**
+ * Creates a dat.GUI object on the screen.
+ *
+ * @return {[type]} [description]
+ */
 function generateDatGUI() {
-  var datOpts = {
-    bulbIntensity,
-    bulbColor,
-    gVelx,
-    gVely,
-    stop: function() {
+  // These are the options for the dat.GUI object
+  var DATOpts = function() {
+    this.canvasColor = canvasColor;
+    this.bulbIntensity = lightBulb.intensity;
+    this.bulbColor = lightBulb.color;
+    this.gVelx = gVelx;
+    this.gVely = gVely;
+    this.tempVelx = this.gVelx;
+    this.tempVely = this.gVely;
+    this.pause = function() {
+      this.tempVelx = gVelx;
+      this.tempVely = gVely;
+      this.gVelx = 0;
+      this.gVely = 0;
       gVelx = 0;
       gVely = 0;
-    },
-    reset: function() {
+    }
+
+    this.resume = function() {
+      this.gVelx = this.tempVelx;
+      this.gVely = this.tempVely;
+      gVelx = this.tempVelx;
+      gVely = this.tempVely;
+    }
+
+    this.reset = function() {
       this.gVelx = 0.01;
       this.gVely = 0.02;
       gVelx = 0.01;
       gVely = 0.02;
-      camera.position.z = 1;
-      cube.material.wireframe = true;
+      camera.copy(origCamera);
     }
   };
 
+  // Creates Base GUI
   var gui = new dat.GUI();
-
-  var velocity = gui.addFolder('Velocity');
-  velocity.add(datOpts, 'gVelx', -.1, .1).name('X').onChange(function(
+  var datOpts = new DATOpts();
+  // Adds Canvas Folder and creates values then opens that folder
+  var fCanvas = gui.addFolder('Canvas');
+  fCanvas.addColor(datOpts, 'canvasColor').name('color').onChange(function(
     value) {
-    gVelx = value;
+    renderer.setClearColor(value, 1.0);
   });
-  velocity.add(datOpts, 'gVely', -.1, .1).name('Y').onChange(function(
-    value) {
-    gVely = value;
-  });
-  velocity.open();
 
-  var fLights = gui.addFolder('Lights');
-  fLights.add(datOpts, 'bulbIntensity', 0, 10).name('intensity').onChange(
+  // Adds Animation Folder and creates values then opens that folder
+  var fAnimation = gui.addFolder('Animation');
+  fAnimation.add(datOpts, 'gVelx', -.1, .1).name('X-Speed').onChange(
     function(
       value) {
-      console.log(value);
-      bulbLight.intensity = value;
+      gVelx = value;
+    }).listen();
+  fAnimation.add(datOpts, 'gVely', -.1, .1).name('Y-Speed').onChange(
+    function(
+      value) {
+      this.gVely = value;
+      gVely = value;
+    }).listen();
+  fAnimation.add(datOpts, 'pause');
+  fAnimation.add(datOpts, 'resume');
+  fAnimation.add(datOpts, 'reset');
+
+  // Adds Lights Folder and creates values then opens that folder
+  var fLights = gui.addFolder('Lights');
+  var fBulb = fLights.addFolder('Center Bulb');
+  fBulb.add(datOpts, 'bulbIntensity', 0, 10).name('intensity').onChange(
+    function(
+      value) {
+      lightBulb.light.intensity = value;
     });
-  fLights.addColor(datOpts, 'bulbColor').onChange(function(
+  fBulb.addColor(datOpts, 'bulbColor').name('color').onChange(function(
     value) {
-    bulbLight.color.set(value);
-    bulbLightObject.material.setValues({
+    lightBulb.light.color.set(value);
+    lightBulb.bulb.material.setValues({
       color: value
     });
   });
-  fLights.open();
 
-  var box = gui.addFolder('Cube');
-  box.add(cube.scale, 'x', 0, 3).name('Width').listen();
-  box.add(cube.scale, 'y', 0, 3).name('Height').listen();
-  box.add(cube.scale, 'z', 0, 3).name('Length').listen();
-  box.add(cube.material, 'wireframe').listen();
-  box.open();
+  // Adds Transform Folder and creates values then opens that folder
+  var fTransforms = gui.addFolder('Transforms');
+  var fCube = fTransforms.addFolder('Cube');
+  fCube.addColor(cube, 'color').onChange(
+    function(value) {
+      cube.mesh.material.setValues({
+        color: value
+      });
+    });
+  fCube.add(cube.mesh.scale, 'x', 0, 3).name('X').listen();
+  fCube.add(cube.mesh.scale, 'y', 0, 3).name('Y').listen();
+  fCube.add(cube.mesh.scale, 'z', 0, 3).name('Z').listen();
+  fCube.add(cube.mesh.material, 'wireframe').listen();
 
-  gui.add(datOpts, 'stop');
-  gui.add(datOpts, 'reset');
+  var fDome = fTransforms.addFolder('Dome');
+  fDome.addColor(dome, 'color').onChange(
+    function(value) {
+      dome.mesh.material.setValues({
+        color: value
+      });
+    });
+  fDome.add(dome.mesh.scale, 'x', 0, 3).name('X').listen();
+  fDome.add(dome.mesh.scale, 'y', 0, 3).name('Y').listen();
+  fDome.add(dome.mesh.scale, 'z', 0, 3).name('Z').listen();
+  fDome.add(dome.mesh.material, 'wireframe').listen();
+
+  var fSphere = fTransforms.addFolder('Sphere');
+  fSphere.addColor(sphere, 'color').onChange(
+    function(value) {
+      sphere.mesh.material.setValues({
+        color: value
+      });
+    });
+  fSphere.add(sphere.mesh.scale, 'x', 0, 3).name('X').listen();
+  fSphere.add(sphere.mesh.scale, 'y', 0, 3).name('Y').listen();
+  fSphere.add(sphere.mesh.scale, 'z', 0, 3).name('Z').listen();
+  fSphere.add(sphere.mesh.material, 'wireframe').listen();
+
+  var fRing = fSphere.addFolder('Ring');
+  fRing.addColor(ring, 'color').onChange(
+    function(value) {
+      ring.mesh.material.setValues({
+        color: value
+      });
+    });
+  fRing.add(ring.mesh.scale, 'x', 0, 3).name('X').listen();
+  fRing.add(ring.mesh.scale, 'y', 0, 3).name('Y').listen();
+  fRing.add(ring.mesh.scale, 'z', 0, 3).name('Z').listen();
+  fRing.add(ring.mesh.material, 'wireframe').listen();
+
+  var fTorus = fTransforms.addFolder('Torus');
+  fTorus.addColor(torus, 'color').onChange(
+    function(value) {
+      torus.mesh.material.setValues({
+        color: value
+      });
+    });
+  fTorus.add(torus.mesh.scale, 'x', 0, 3).name('X').listen();
+  fTorus.add(torus.mesh.scale, 'y', 0, 3).name('Y').listen();
+  fTorus.add(torus.mesh.scale, 'z', 0, 3).name('Z').listen();
+  fTorus.add(torus.mesh.material, 'wireframe').listen();
+
+  var fTorusKnot = fTransforms.addFolder('TorusKnot');
+  fTorusKnot.addColor(torusKnot, 'color').onChange(
+    function(value) {
+      torusKnot.mesh.material.setValues({
+        color: value
+      });
+    });
+  fTorusKnot.add(torusKnot.mesh.scale, 'x', 0, 3).name('X').listen();
+  fTorusKnot.add(torusKnot.mesh.scale, 'y', 0, 3).name('Y').listen();
+  fTorusKnot.add(torusKnot.mesh.scale, 'z', 0, 3).name('Z').listen();
+  fTorusKnot.add(torusKnot.mesh.material, 'wireframe').listen();
 }
